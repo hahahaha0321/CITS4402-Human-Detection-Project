@@ -6,54 +6,16 @@ from sklearn import svm
 import os
 import random
 
-"""
-def train_SVM(training_folder, num_bins = 9, block_size = 16, dx_kernel = np.array([[-1, 0, 1]]), dy_kernel = np.array([[1], [0], [-1]])):
-    human_image_path = training_folder + '/human'
-    nonhuman_image_path = training_folder + '/non-human'
-    print("Training SVM classifier - using images from  \"", training_folder, "\"")
-    images = []
-    y = []
+#optimal parameters found in ablation study
+num_bins = 133
+block_size = 16
+dx_kernel=np.array([[-1, 0, 1]])
+dy_kernel=np.array([[1], [0], [-1]])
+norm_technique = "L2-hys"
+block_forming_pattern = "horizontal"
 
-    total_human_images = len(os.listdir(human_image_path))
-    total_nonhuman_images = len(os.listdir(nonhuman_image_path))
-    total_images = total_human_images + total_nonhuman_images
-    processed_images = 0
-    print(total_images, " images to be processed")
-    
-    for filename in os.listdir(human_image_path):
-        img_path = os.path.join(human_image_path, filename)
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-        if img is not None:
-            images.append(img)
-            y.append(1)
-            
-        # Track and print progress
-        processed_images += 1
-        print(f"Processed {processed_images} of {total_images} images ({100 * processed_images // total_images}%)")
-
-    for filename in os.listdir(nonhuman_image_path):
-        img_path = os.path.join(nonhuman_image_path, filename)
-        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-        if img is not None:
-            images.append(img)
-            y.append(0)
-        
-        # Track and print progress
-        processed_images += 1
-        print(f"Processed {processed_images} of {total_images} images ({100 * processed_images // total_images}%)")
-
-    # Extract features
-    X = [np.array(feature_extraction(img, num_bins, block_size, dx_kernel, dy_kernel)).flatten() for img in images]
-
-    # Train the classifier
-    classifier = svm.LinearSVC()
-    classifier.fit(X, y)
-
-    return classifier
-
-"""
-
-def train_SVM(training_folder, num_bins=133, block_size=16, dx_kernel=np.array([[-1, 0, 1]]), dy_kernel=np.array([[1], [0], [-1]]), norm_technique = "L2-hys",block_forming_pattern = "TL_square"):
+#trains SVM using default parameters for feature extraction
+def train_SVM(training_folder =  r"dataset/train", num_bins=num_bins, block_size=block_size, dx_kernel=dx_kernel, dy_kernel=dy_kernel, norm_technique=norm_technique, block_forming_pattern=block_forming_pattern):
     
     human_image_path = training_folder + '/human'
     nonhuman_image_path = training_folder + '/non-human'
@@ -92,7 +54,7 @@ def train_SVM(training_folder, num_bins=133, block_size=16, dx_kernel=np.array([
 
     return classifier
     
-def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel = np.array([[-1, 0, 1]]), dy_kernel = np.array([[1], [0], [-1]]), norm_technique = "L2-hys", block_forming_pattern = "TL_square", verbose = False):
+def test_SVM(test_folder, classifier, num_bins=num_bins, block_size=block_size, dx_kernel=dx_kernel, dy_kernel=dy_kernel, norm_technique=norm_technique, block_forming_pattern=block_forming_pattern, verbose = False):
     print("\nTesting SVM Classifier - using images from  \"", test_folder, "\"")
     human_image_path = test_folder + '/human'
     nonhuman_image_path = test_folder + '/non-human'
@@ -104,8 +66,8 @@ def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel
     FN = 0
     
     #detection window this to match the size of testing data
-    detection_window_width = 18
-    detection_window_height = 36
+    detection_window_width = 64 #18
+    detection_window_height = 128 #36
     
     x_step_size = detection_window_width//2
     y_step_size = detection_window_height//2
@@ -137,7 +99,7 @@ def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel
                         prediction = 1 #human was detected
                         break
                     
-            print("Prediction for ", os.path.basename(img_path), " is ", prediction, " expected ", 1)
+            #print("Prediction for ", os.path.basename(img_path), " is ", prediction, " expected ", 1)
             predictions.append(prediction)
             if prediction == 1:
                 TP += 1
@@ -161,7 +123,7 @@ def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel
                         break
                     
             predictions.append(prediction)
-            print("Prediction for ", os.path.basename(img_path), " is ", prediction, " expected ", 0)
+            #print("Prediction for ", os.path.basename(img_path), " is ", prediction, " expected ", 0)
             if prediction == 0:
                 TN += 1
             else:
@@ -170,7 +132,7 @@ def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel
     accuracy = 0
     precision = 0
     recall = 0
-    if (TP+TN+FP+FN != 0):	
+    if (TP+TN+FP+FN != 0):
         accuracy = (TP+TN)/(TP+TN+FP+FN)    
     if (TP+FP != 0):
         precision =  TP/(TP+FP)
@@ -189,7 +151,8 @@ def test_SVM(test_folder, classifier, num_bins = 133, block_size = 16, dx_kernel
     
     return (TP, FP, TN, FN, accuracy, precision, recall, predictions, file_names)
 
-def main(datasetFolder, verbose = False):
+#trains and tests SVM classifier 
+def main(datasetFolder = "dataset", verbose = False):
     
     print("Starting training...")
     trainingFolder = datasetFolder + "/train"

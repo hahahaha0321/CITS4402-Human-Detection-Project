@@ -2,22 +2,6 @@ import numpy as np
 import math
 import cv2
 
-"""
-OVERVIEW of HOG feature extractio
-1. Resize image to aspect ratio 1:2 (64x128)
-2. Calculate x and y gradient of each pixel using gradient kernel e.g. sobel
-3. Calculate magnitude and orientation of gradients
-4. Create histogram by sorting gradient into bins based on their direction and magnitude (see slide 58-62 on lecture wk7)
-5. Calculate histogram for the cells (8x8 panels) if 9 bins, hist = 9x1
-6. Normalise histogram in 16x16 block (combinging 4 adjacent cells) (minimise effect of lighting change in image) makes a hist=36x1
-7. Combine all histograms (36x1 for each block) to make large histogram of "features"
-"""
-def passPath(img_path):
-    img = cv2.imread(img_path)
-    #cv2.imshow("Image", img)
-    #cv2.waitKey(0)          # Wait for a key press indefinitely
-    #cv2.destroyAllWindows() # Close all OpenCV windows
-    feature_extraction(img)
 
 #normalization scheme used in research paper
 def l2_hys_normalize(v):

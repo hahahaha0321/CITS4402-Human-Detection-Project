@@ -8,6 +8,11 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
 import shutil
 import time
+import numpy as np
+from feature_extraction import feature_extraction
+
+from joblib import load #imports the SVM classifier that has been trained in train_SVM
+clf = load('svm_model.joblib')
 
 # === GUI Class ===
 class HumanDetectorGUI:
@@ -131,10 +136,18 @@ class HumanDetectorGUI:
 
         if self.image_index >= len(self.images):
             self.image_index = 0  # Reset to start or remove this line to stop
-
+        
+        
+                    
+                    
         img_path = self.images[self.image_index]
         img = Image.open(img_path)
+        
+        hog_features = np.array(feature_extraction(img)).flatten()
+        prediction = clf.predict([hog_features])
+        
         img = img.resize((200, 400))  # Resize as needed
+        
         self.photo = ImageTk.PhotoImage(img)
         self.image_canvas.delete("all")  # Clear previous image
         self.image_canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
@@ -142,7 +155,10 @@ class HumanDetectorGUI:
         self.filename_label.config(text=os.path.basename(img_path))
         
         self.image_name_label.config(text=os.path.basename(img_path))
-        self.prediction_label.config(text="placeholder")
+        if (prediction == 0):
+            self.prediction_label.config(text="NON-HUMAN")
+        else:
+            self.prediction_label.config(text="NON-HUMAN");
         
         self.image_index += 1
         self.master.after(2000, self.show_predictions)
